@@ -535,18 +535,18 @@ def submit_answer_for_user(username, answer_index):
 
 @app.get("/", response_class=HTMLResponse)
 def splash(request: Request):
-    return templates.TemplateResponse("splash.html", {"request": request})
+    return templates.TemplateResponse(request, "splash.html", {"request": request})
 
 
 @app.get("/landing", response_class=HTMLResponse)
 def landing(request: Request):
-    return templates.TemplateResponse("landing.html", {"request": request})
+    return templates.TemplateResponse(request, "landing.html", {"request": request})
 
 
 @app.get("/rules", response_class=HTMLResponse)
 def rules_page(request: Request):
     username, user = get_current_user(request)
-    return templates.TemplateResponse("rules.html", {
+    return templates.TemplateResponse(request, "rules.html", {
         "request": request,
         "username": username,
         "user": user
@@ -570,7 +570,10 @@ def accept_rules(request: Request, accept_rules: str = Form(...)):
 
 @app.get("/register", response_class=HTMLResponse)
 def register_page(request: Request):
-    return templates.TemplateResponse("register.html", {"request": request, "error": None})
+    return templates.TemplateResponse(request, "register.html", {
+        "request": request,
+        "error": None
+    })
 
 
 @app.post("/register", response_class=HTMLResponse)
@@ -586,20 +589,20 @@ def register_post(
     national_id = national_id.strip()
 
     if not username or not password or not national_id:
-        return templates.TemplateResponse("register.html", {
+        return templates.TemplateResponse(request, "register.html", {
             "request": request,
             "error": "همه فیلدها الزامی هستند."
         })
 
     if username in users:
-        return templates.TemplateResponse("register.html", {
+        return templates.TemplateResponse(request, "register.html", {
             "request": request,
             "error": "این نام کاربری قبلاً ثبت شده است."
         })
 
     for _, u in users.items():
         if u.get("national_id") == national_id:
-            return templates.TemplateResponse("register.html", {
+            return templates.TemplateResponse(request, "register.html", {
                 "request": request,
                 "error": "این کد ملی قبلاً ثبت شده است."
             })
@@ -614,7 +617,10 @@ def register_post(
 
 @app.get("/login", response_class=HTMLResponse)
 def login_page(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request, "error": None})
+    return templates.TemplateResponse(request, "login.html", {
+        "request": request,
+        "error": None
+    })
 
 
 @app.post("/login", response_class=HTMLResponse)
@@ -624,13 +630,13 @@ def login_post(request: Request, username: str = Form(...), password: str = Form
     user = users.get(clean_username)
 
     if not user or user.get("password") != password:
-        return templates.TemplateResponse("login.html", {
+        return templates.TemplateResponse(request, "login.html", {
             "request": request,
             "error": "نام کاربری یا رمز عبور نادرست است."
         })
 
     if user.get("is_blocked"):
-        return templates.TemplateResponse("login.html", {
+        return templates.TemplateResponse(request, "login.html", {
             "request": request,
             "error": "حساب شما مسدود شده است. با پشتیبانی تماس بگیرید."
         })
@@ -647,7 +653,7 @@ def login_post(request: Request, username: str = Form(...), password: str = Form
 
 @app.get("/forgot-password", response_class=HTMLResponse)
 def forgot_password_page(request: Request):
-    return templates.TemplateResponse("forgot_password.html", {
+    return templates.TemplateResponse(request, "forgot_password.html", {
         "request": request,
         "message": None,
         "error": None
@@ -664,13 +670,13 @@ def forgot_password_post(
     user = users.get(username.strip())
 
     if not user or user.get("national_id") != national_id.strip():
-        return templates.TemplateResponse("forgot_password.html", {
+        return templates.TemplateResponse(request, "forgot_password.html", {
             "request": request,
             "message": None,
             "error": "اطلاعات وارد شده صحیح نیست."
         })
 
-    return templates.TemplateResponse("forgot_password.html", {
+    return templates.TemplateResponse(request, "forgot_password.html", {
         "request": request,
         "message": f"رمز عبور شما: {user.get('password')}",
         "error": None
@@ -695,7 +701,7 @@ def home(request: Request):
     active_game = state.get("active_game")
     can_cancel = can_cancel_waiting(user, users)
 
-    return templates.TemplateResponse("home.html", {
+    return templates.TemplateResponse(request, "home.html", {
         "request": request,
         "username": username,
         "user": user,
@@ -726,7 +732,7 @@ def wallet_page(request: Request):
                     "score": p.get("score", 0)
                 })
 
-    return templates.TemplateResponse("wallet.html", {
+    return templates.TemplateResponse(request, "wallet.html", {
         "request": request,
         "username": username,
         "user": user,
@@ -756,7 +762,7 @@ def payment_page(request: Request):
     if not username or not user:
         return RedirectResponse("/login", status_code=303)
 
-    return templates.TemplateResponse("payment.html", {
+    return templates.TemplateResponse(request, "payment.html", {
         "request": request,
         "username": username,
         "user": user,
@@ -780,7 +786,7 @@ def payment_post(request: Request, entry_fee: int = Form(...)):
         return RedirectResponse("/waiting", status_code=303)
 
     if entry_fee not in ALLOWED_ENTRY_FEES:
-        return templates.TemplateResponse("payment.html", {
+        return templates.TemplateResponse(request, "payment.html", {
             "request": request,
             "username": username,
             "user": user,
@@ -792,7 +798,7 @@ def payment_post(request: Request, entry_fee: int = Form(...)):
         return RedirectResponse("/rules", status_code=303)
 
     if user.get("wallet_balance", 0) < entry_fee:
-        return templates.TemplateResponse("payment.html", {
+        return templates.TemplateResponse(request, "payment.html", {
             "request": request,
             "username": username,
             "user": user,
@@ -837,7 +843,7 @@ def waiting(request: Request):
     user = users.get(username)
     can_cancel = can_cancel_waiting(user, users)
 
-    return templates.TemplateResponse("waiting.html", {
+    return templates.TemplateResponse(request, "waiting.html", {
         "request": request,
         "username": username,
         "user": user,
@@ -896,7 +902,7 @@ def game(request: Request):
     question = get_question_by_id(active_game.get("current_question_id"))
     scoreboard = get_scoreboard(active_game)
 
-    return templates.TemplateResponse("game.html", {
+    return templates.TemplateResponse(request, "game.html", {
         "request": request,
         "username": username,
         "user": user,
@@ -958,7 +964,7 @@ def results_page(request: Request):
                 my_result = p
                 break
 
-    return templates.TemplateResponse("results.html", {
+    return templates.TemplateResponse(request, "results.html", {
         "request": request,
         "username": username,
         "user": user,
